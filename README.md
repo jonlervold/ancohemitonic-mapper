@@ -30,7 +30,7 @@ python3 main.py
 
 1. Choose a MIDI input device and a MIDI output device (Refresh if ports changed after launch).
 2. Choose Root and Mode. Physical white keys always play degrees 1–7 of that mode.
-3. Optionally check **Assign modes to second keyboard**, pick a different MIDI input as the **Mode keyboard**, and click **Edit key assignments...** to store up to 12 root/mode pairs on C–B.
+3. Optionally check **Assign modes to second keyboard**. The Root and Mode dropdowns hide; pick a different MIDI input as the **Mode keyboard**, and click **Edit key assignments...** to store up to 12 root/mode pairs on C–B.
 4. Click **Start**.
 5. Status should show `Running`. **Input** / **Output** update as you play white keys.
 
@@ -106,9 +106,9 @@ Black keys are ignored. Sustain, other CCs, pitch bend, aftertouch, and program 
 
 ## 9. Second keyboard mode presets
 
-With **Assign modes to second keyboard** unchecked, the app behaves as a single-input remapper.
+With **Assign modes to second keyboard** unchecked, the app behaves as a single-input remapper. The Root and Mode dropdowns stay on the main window.
 
-When the checkbox is on:
+When the checkbox is on, those dropdowns hide. Root and Mode are set only by the second keyboard:
 
 1. Choose a **Mode keyboard** that is not the performance MIDI input.
 2. Click **Edit key assignments...** to open the 12-key table. Each chromatic pitch class (`C` through `B`) can store a root and a short mode name, for example `C: D MM-1`. Leave a row as `(none)` to ignore that key.

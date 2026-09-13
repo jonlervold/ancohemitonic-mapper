@@ -100,6 +100,7 @@ def apply_live_settings(window, transformer, values):
 
 def set_assign_section_visible(window, visible):
     window["-MODE-KB-SECTION-"].update(visible=visible)
+    window["-ROOT-MODE-SECTION-"].update(visible=not visible)
     window.refresh()
 
 
@@ -196,7 +197,6 @@ def open_assign_window(transformer):
         "Key assignments",
         build_assign_layout(transformer.preset_slots),
         finalize=True,
-        disable_minimize=True,
     )
 
 
@@ -297,26 +297,37 @@ def build_layout():
                 )
             )
         ],
-        [sg.Text("Root")],
         [
-            sg.Combo(
-                NOTE_NAMES,
-                default_value=DEFAULT_ROOT,
-                key="-ROOT-",
-                size=(52, 1),
-                readonly=True,
-                enable_events=True,
-            )
-        ],
-        [sg.Text("Mode")],
-        [
-            sg.Combo(
-                MODE_LABELS,
-                default_value=DEFAULT_MODE_LABEL,
-                key="-MODE-",
-                size=(80, 1),
-                readonly=True,
-                enable_events=True,
+            sg.pin(
+                sg.Column(
+                    [
+                        [sg.Text("Root")],
+                        [
+                            sg.Combo(
+                                NOTE_NAMES,
+                                default_value=DEFAULT_ROOT,
+                                key="-ROOT-",
+                                size=(52, 1),
+                                readonly=True,
+                                enable_events=True,
+                            )
+                        ],
+                        [sg.Text("Mode")],
+                        [
+                            sg.Combo(
+                                MODE_LABELS,
+                                default_value=DEFAULT_MODE_LABEL,
+                                key="-MODE-",
+                                size=(80, 1),
+                                readonly=True,
+                                enable_events=True,
+                            )
+                        ],
+                    ],
+                    key="-ROOT-MODE-SECTION-",
+                    visible=True,
+                    pad=(0, 0),
+                )
             )
         ],
         [
