@@ -250,32 +250,38 @@ def formula_to_display(formula):
 def _flatten(groups):
     flattened = []
     by_label = {}
+    by_name = {}
     for group in groups:
         parent = group["parentScaleName"]
         for mode in group["modes"]:
+            name = mode["modeName"]
             label = "%s - %s - %s" % (
                 parent,
-                mode["modeName"],
+                name,
                 formula_to_display(mode["formula"]),
             )
             entry = {
                 "label": label,
                 "parentScaleName": parent,
-                "modeName": mode["modeName"],
+                "modeName": name,
                 "formula": tuple(mode["formula"]),
             }
             flattened.append(entry)
             by_label[label] = entry
-    return flattened, by_label
+            if name in by_name:
+                raise ValueError("Duplicate mode name: %s" % name)
+            by_name[name] = entry
+    return flattened, by_label, by_name
 
 
 _validate_modes(ANCOHEMITONIC_MODES)
-FLATTENED_MODES, MODE_BY_LABEL = _flatten(ANCOHEMITONIC_MODES)
+FLATTENED_MODES, MODE_BY_LABEL, MODE_BY_NAME = _flatten(ANCOHEMITONIC_MODES)
 MODE_LABELS = [mode["label"] for mode in FLATTENED_MODES]
-DEFAULT_MODE_LABEL = "Diatonic - Ionian/Major - 1 2 3 4 5 6 7"
+MODE_NAMES = [mode["modeName"] for mode in FLATTENED_MODES]
+DEFAULT_MODE_LABEL = MODE_BY_NAME["D+2"]["label"]
 IONIAN_LABEL = DEFAULT_MODE_LABEL
-DORIAN_LABEL = "Diatonic - Dorian - 1 2 b3 4 5 6 b7"
-LYDIAN_LABEL = "Diatonic - Lydian - 1 2 3 #4 5 6 7"
+DORIAN_LABEL = MODE_BY_NAME["D0"]["label"]
+LYDIAN_LABEL = MODE_BY_NAME["D+3"]["label"]
 
 
 def formula_for_label(label):
@@ -283,3 +289,17 @@ def formula_for_label(label):
         return MODE_BY_LABEL[label]["formula"]
     except KeyError:
         raise ValueError("Unknown mode: %s" % label)
+
+
+def label_for_mode_name(name):
+    try:
+        return MODE_BY_NAME[name]["label"]
+    except KeyError:
+        raise ValueError("Unknown mode: %s" % name)
+
+
+def formula_for_mode_name(name):
+    try:
+        return MODE_BY_NAME[name]["formula"]
+    except KeyError:
+        raise ValueError("Unknown mode: %s" % name)

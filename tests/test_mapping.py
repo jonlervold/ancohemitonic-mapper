@@ -107,6 +107,15 @@ class ModeDatabaseTests(unittest.TestCase):
         for mode in FLATTENED_MODES:
             self.assertEqual(len(mode["formula"]), 7)
 
+    def test_short_mode_names_are_unique(self):
+        from modes import MODE_BY_NAME, MODE_NAMES, label_for_mode_name
+
+        self.assertEqual(len(MODE_NAMES), 42)
+        self.assertEqual(len(MODE_NAMES), len(set(MODE_NAMES)))
+        self.assertEqual(len(MODE_BY_NAME), 42)
+        self.assertEqual(label_for_mode_name("D+2"), IONIAN_LABEL)
+        self.assertEqual(label_for_mode_name("D0"), DORIAN_LABEL)
+
     def test_malformed_formula_fails_clearly(self):
         from modes import _validate_modes
 
@@ -144,10 +153,10 @@ class FormulaDisplayTests(unittest.TestCase):
     def test_dropdown_labels_include_formula(self):
         from modes import MODE_BY_LABEL
 
-        self.assertIn("Melodic Minor - Lydian Dominant - 1 2 3 #4 5 6 b7", MODE_BY_LABEL)
-        self.assertIn("Harmonic Minor - Ultralocrian - 1 b2 b3 b4 b5 b6 bb7", MODE_BY_LABEL)
+        self.assertIn("Melodic Minor - MM+2 - 1 2 3 #4 5 6 b7", MODE_BY_LABEL)
+        self.assertIn("Harmonic Minor - Hm-5 - 1 b2 b3 b4 b5 b6 bb7", MODE_BY_LABEL)
         self.assertIn(
-            "Hungarian Major - Ultralocrian Double-Flat 6 - 1 b2 b3 b4 b5 bb6 bb7",
+            "Hungarian Major - Hu-6 - 1 b2 b3 b4 b5 bb6 bb7",
             MODE_BY_LABEL,
         )
         self.assertIn(IONIAN_LABEL, MODE_BY_LABEL)

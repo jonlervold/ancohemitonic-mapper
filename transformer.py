@@ -6,10 +6,12 @@ import sys
 import rtmidi
 
 from mapping import build_white_key_mapping, mode_offsets_from_formula, transform_note_with_mapping
-from modes import DEFAULT_MODE_LABEL, formula_for_label
+from modes import DEFAULT_MODE_LABEL, formula_for_label, label_for_mode_name
 from notes import DEFAULT_ROOT, midi_to_name, parse_root
+from presets import SLOT_COUNT, empty_slots
 
 CLIENT_NAME = "Ancohemitonic Mapper"
+CONTROL_CLIENT_NAME = "Ancohemitonic Mapper Control"
 PREFERRED_OUTPUT_NAMES = (
     "IAC Driver Entonal Out",
     "IAC Driver Bus 1",
@@ -91,6 +93,7 @@ class MidiTransformer:
     def __init__(self, window):
         self.window = window
         self.midi_in = None
+        self.midi_control_in = None
         self.midi_out = None
         self.output_port_name = None
         self.force_channel = False
@@ -98,6 +101,7 @@ class MidiTransformer:
         self.running = False
         self.active_notes = {}
         self._used_out_channels = set()
+        self.preset_slots = empty_slots()
         self.root_pc = parse_root(DEFAULT_ROOT)
         self.mode_offsets = tuple(mode_offsets_from_formula(formula_for_label(DEFAULT_MODE_LABEL)))
         self._mapping = build_white_key_mapping(self.root_pc, self.mode_offsets)
@@ -110,6 +114,29 @@ class MidiTransformer:
         formula = formula_for_label(mode_label)
         self.mode_offsets = tuple(mode_offsets_from_formula(formula))
         self._rebuild_mapping()
+
+    def set_preset_slot(self, pitch_class, root=None, mode_name=None):
+        if pitch_class < 0 or pitch_class >= SLOT_COUNT:
+            raise ValueError("Preset slot must be 0-11")
+        if not root or not mode_name:
+            self.preset_slots[pitch_class] = None
+            return
+        parse_root(root)
+        label_for_mode_name(mode_name)
+        self.preset_slots[pitch_class] = (root, mode_name)
+
+    def set_preset_slots(self, slots):
+        if len(slots) != SLOT_COUNT:
+            raise ValueError("Expected %d preset slots" % SLOT_COUNT)
+        validated = empty_slots()
+        for pitch_class, slot in enumerate(slots):
+            if slot is None:
+                continue
+            root, mode_name = slot
+            parse_root(root)
+            label_for_mode_name(mode_name)
+            validated[pitch_class] = (root, mode_name)
+        self.preset_slots = validated
 
     def _rebuild_mapping(self):
         self._mapping = build_white_key_mapping(self.root_pc, self.mode_offsets)
@@ -204,33 +231,60 @@ class MidiTransformer:
         self.output_port_name = port_name
         logging.info("Opened MIDI output destination: %s", port_name)
 
-    def start(self, input_port_name, output_port_name):
+    def start(self, input_port_name, output_port_name, control_port_name=None):
         if self.running:
             return
         if not input_port_name:
             raise ValueError("No MIDI input device selected.")
         if not output_port_name:
             raise ValueError("No MIDI output device selected.")
+        if control_port_name:
+            if control_port_name == input_port_name:
+                raise ValueError("Mode keyboard must be a different device.")
 
         self.ensure_midi_out(output_port_name)
 
-        midi_in = rtmidi.MidiIn(rtapi=_configured_api(), name=CLIENT_NAME)
+        midi_in = self._open_midi_in(input_port_name, CLIENT_NAME, self._callback)
+        midi_control_in = None
+        if control_port_name:
+            try:
+                midi_control_in = self._open_midi_in(
+                    control_port_name,
+                    CONTROL_CLIENT_NAME,
+                    self._control_callback,
+                )
+            except Exception:
+                self._close_midi_in(midi_in)
+                raise
+
+        self.midi_in = midi_in
+        self.midi_control_in = midi_control_in
+        self.running = True
+        logging.info("Selected MIDI input: %s", input_port_name)
+        logging.info("Selected MIDI output: %s", output_port_name)
+        if control_port_name:
+            logging.info("Selected mode keyboard: %s", control_port_name)
+        logging.info("Started")
+
+    def _open_midi_in(self, port_name, client_name, callback):
+        midi_in = rtmidi.MidiIn(rtapi=_configured_api(), name=client_name)
         logging.info(
-            "Selected-input backend: %s",
+            "MIDI input backend (%s): %s",
+            client_name,
             _api_description(midi_in.get_current_api()),
         )
         ports = list(midi_in.get_ports() or [])
         logging.info("Detected MIDI devices: %s", ports)
         try:
-            index = ports.index(input_port_name)
+            index = ports.index(port_name)
         except ValueError:
             del midi_in
-            raise ValueError("MIDI input device not found: %s" % input_port_name)
+            raise ValueError("MIDI input device not found: %s" % port_name)
 
         try:
             midi_in.ignore_types(sysex=True, timing=True, active_sense=True)
             midi_in.open_port(index)
-            midi_in.set_callback(self._callback)
+            midi_in.set_callback(callback)
         except Exception:
             try:
                 midi_in.close_port()
@@ -238,18 +292,20 @@ class MidiTransformer:
                 pass
             del midi_in
             raise
-
-        self.midi_in = midi_in
-        self.running = True
-        logging.info("Selected MIDI input: %s", input_port_name)
-        logging.info("Selected MIDI output: %s", output_port_name)
-        logging.info("Started")
+        return midi_in
 
     def stop(self):
         self.panic()
         midi_in = self.midi_in
+        midi_control_in = self.midi_control_in
         self.midi_in = None
+        self.midi_control_in = None
         self.running = False
+        self._close_midi_in(midi_in)
+        self._close_midi_in(midi_control_in)
+        logging.info("Stopped")
+
+    def _close_midi_in(self, midi_in):
         if midi_in is None:
             return
         try:
@@ -262,7 +318,6 @@ class MidiTransformer:
         except Exception:
             logging.exception("Error closing MIDI input")
         del midi_in
-        logging.info("Stopped")
 
     def _close_midi_out(self):
         midi_out = self.midi_out
@@ -307,6 +362,17 @@ class MidiTransformer:
             except Exception:
                 pass
 
+    def _control_callback(self, event, data=None):
+        try:
+            message, _dt = event
+            self.handle_control_message(message)
+        except Exception as exc:
+            logging.exception("Mode keyboard callback error")
+            try:
+                self.window.write_event_value("-ERROR-", str(exc))
+            except Exception:
+                pass
+
     def handle_message(self, message):
         if not message:
             return
@@ -331,6 +397,36 @@ class MidiTransformer:
             return
 
         self._send(self._with_output_channel(message, in_channel))
+
+    def handle_control_message(self, message):
+        if not message:
+            return
+        status = message[0]
+        if status >= STATUS_SYSTEM:
+            return
+        msg_type = status & 0xF0
+        needed = CHANNEL_MESSAGE_LENGTHS.get(msg_type)
+        if needed is None or len(message) < needed:
+            return
+        if msg_type != STATUS_NOTE_ON:
+            return
+        if message[2] == 0:
+            return
+        self._apply_control_note(message[1])
+
+    def _apply_control_note(self, input_note):
+        slot = self.preset_slots[input_note % 12]
+        if slot is None:
+            return
+        root, mode_name = slot
+        label = label_for_mode_name(mode_name)
+        self.set_root(root)
+        self.set_mode(label)
+        logging.info("Mode preset %s -> %s %s", input_note % 12, root, mode_name)
+        try:
+            self.window.write_event_value("-PRESET-", (root, label))
+        except Exception:
+            pass
 
     def _handle_note_on(self, in_channel, input_note, velocity):
         mapping = self._mapping

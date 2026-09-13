@@ -30,8 +30,9 @@ python3 main.py
 
 1. Choose a MIDI input device and a MIDI output device (Refresh if ports changed after launch).
 2. Choose Root and Mode. Physical white keys always play degrees 1–7 of that mode.
-3. Click **Start**.
-4. Status should show `Running`. **Input** / **Output** update as you play white keys.
+3. Optionally check **Assign modes to second keyboard**, pick a different MIDI input as the **Mode keyboard**, and click **Edit key assignments...** to store up to 12 root/mode pairs on C–B.
+4. Click **Start**.
+5. Status should show `Running`. **Input** / **Output** update as you play white keys.
 
 Logs are written to `~/Library/Logs/Ancohemitonic Mapper.log`.
 
@@ -102,4 +103,23 @@ Root and Mode can be changed while running. Already-held notes keep their origin
 Use **Force output channel** only if the destination expects a specific MIDI channel (1–16). By default the incoming channel is preserved.
 
 Black keys are ignored. Sustain, other CCs, pitch bend, aftertouch, and program change pass through.
+
+## 9. Second keyboard mode presets
+
+With **Assign modes to second keyboard** unchecked, the app behaves as a single-input remapper.
+
+When the checkbox is on:
+
+1. Choose a **Mode keyboard** that is not the performance MIDI input.
+2. Click **Edit key assignments...** to open the 12-key table. Each chromatic pitch class (`C` through `B`) can store a root and a short mode name, for example `C: D MM-1`. Leave a row as `(none)` to ignore that key.
+3. Any octave of an assigned key switches Root and Mode for the performance keyboard. Held notes keep their current output pitches until released. Mode-keyboard notes and CCs are not sent to the MIDI output.
+
+**Import...** / **Export...** in the assignment window read and write a plain text file. Unmentioned keys become empty on import. Example:
+
+```
+# Ancohemitonic Mapper mode presets
+C: D MM-1
+C#/Db: F Hu+3
+D: E D0
+```
 

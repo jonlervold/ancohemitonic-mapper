@@ -1,7 +1,7 @@
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -12,6 +12,8 @@ except ImportError:
 
 from transformer import (
     CC_ALL_NOTES_OFF,
+    CLIENT_NAME,
+    CONTROL_CLIENT_NAME,
     PREFERRED_OUTPUT_NAMES,
     STATUS_CC,
     STATUS_CHANNEL_PRESSURE,
@@ -22,7 +24,7 @@ from transformer import (
     STATUS_PROGRAM,
     MidiTransformer,
 )
-from modes import DORIAN_LABEL, IONIAN_LABEL
+from modes import DORIAN_LABEL, IONIAN_LABEL, label_for_mode_name
 
 C4 = 60
 CS4 = 61
@@ -220,6 +222,156 @@ class MidiTransformerTests(unittest.TestCase):
         )
         transformer.handle_message([STATUS_NOTE_ON, C4, 100])
         self.assertEqual(transformer.midi_out.sent[-1], [STATUS_NOTE_ON, D4, 100])
+
+    def test_control_note_on_switches_mapping(self):
+        transformer, window = make_transformer()
+        transformer.set_root("C")
+        transformer.set_mode(IONIAN_LABEL)
+        transformer.set_preset_slot(0, "D", "D0")
+        transformer.handle_control_message([STATUS_NOTE_ON, C4, 100])
+        self.assertEqual(window.events[-1], ("-PRESET-", ("D", DORIAN_LABEL)))
+        self.assertEqual(transformer.midi_out.sent, [])
+        transformer.handle_message([STATUS_NOTE_ON, C4, 90])
+        self.assertEqual(transformer.midi_out.sent, [[STATUS_NOTE_ON, D4, 90]])
+
+    def test_control_any_octave_of_c_hits_same_slot(self):
+        transformer, window = make_transformer()
+        transformer.set_preset_slot(0, "D", "MM-1")
+        transformer.handle_control_message([STATUS_NOTE_ON, 48, 100])  # C3
+        transformer.handle_control_message([STATUS_NOTE_ON, 72, 100])  # C5
+        self.assertEqual(len(window.events), 2)
+        self.assertEqual(window.events[0], window.events[1])
+        self.assertEqual(window.events[0][1][0], "D")
+        self.assertEqual(window.events[0][1][1], label_for_mode_name("MM-1"))
+
+    def test_unassigned_control_key_is_ignored(self):
+        transformer, window = make_transformer()
+        transformer.set_root("C")
+        transformer.set_mode(IONIAN_LABEL)
+        transformer.handle_control_message([STATUS_NOTE_ON, D4, 100])
+        self.assertEqual(window.events, [])
+        transformer.handle_message([STATUS_NOTE_ON, C4, 80])
+        self.assertEqual(transformer.midi_out.sent, [[STATUS_NOTE_ON, C4, 80]])
+
+    def test_control_notes_and_cc_are_never_sent(self):
+        transformer, _window = make_transformer()
+        transformer.set_preset_slot(0, "D", "D0")
+        transformer.handle_control_message([STATUS_NOTE_ON, C4, 100])
+        transformer.handle_control_message([STATUS_NOTE_OFF, C4, 0])
+        transformer.handle_control_message([STATUS_CC, 64, 127])
+        transformer.handle_control_message([STATUS_NOTE_ON, C4, 0])
+        self.assertEqual(transformer.midi_out.sent, [])
+
+    def test_held_performance_note_keeps_old_pitch_after_control_switch(self):
+        transformer, _window = make_transformer()
+        transformer.set_root("C")
+        transformer.set_mode(IONIAN_LABEL)
+        transformer.set_preset_slot(2, "D", "D0")
+        transformer.handle_message([STATUS_NOTE_ON, C4, 100])
+        transformer.handle_control_message([STATUS_NOTE_ON, D4, 100])
+        transformer.handle_message([STATUS_NOTE_OFF, C4, 0])
+        self.assertEqual(
+            transformer.midi_out.sent,
+            [
+                [STATUS_NOTE_ON, C4, 100],
+                [STATUS_NOTE_OFF, C4, 0],
+            ],
+        )
+        transformer.handle_message([STATUS_NOTE_ON, C4, 100])
+        self.assertEqual(transformer.midi_out.sent[-1], [STATUS_NOTE_ON, D4, 100])
+
+    def test_start_without_control_port_opens_one_input(self):
+        fake_rtmidi = MagicMock()
+        fake_rtmidi.API_UNSPECIFIED = 0
+        fake_rtmidi.API_MACOSX_CORE = 1
+        fake_rtmidi.get_compiled_api.return_value = [1]
+        fake_rtmidi.get_api_display_name.return_value = "Core MIDI"
+        fake_rtmidi.get_api_name.return_value = "MACOSX_CORE"
+
+        midi_out = MagicMock()
+        midi_out.get_current_api.return_value = 1
+        midi_out.is_port_open.return_value = True
+        midi_out.get_ports.return_value = ["IAC Driver Entonal Out"]
+        fake_rtmidi.MidiOut.return_value = midi_out
+
+        midi_in = MagicMock()
+        midi_in.get_current_api.return_value = 1
+        midi_in.is_port_open.return_value = True
+        midi_in.get_ports.return_value = ["Performance"]
+        fake_rtmidi.MidiIn.return_value = midi_in
+
+        with (
+            patch("transformer.rtmidi", fake_rtmidi),
+            patch("transformer.sys.platform", "darwin"),
+        ):
+            transformer = MidiTransformer(FakeWindow())
+            transformer.start("Performance", "IAC Driver Entonal Out")
+
+        fake_rtmidi.MidiIn.assert_called_once_with(rtapi=1, name=CLIENT_NAME)
+        self.assertIs(transformer.midi_in, midi_in)
+        self.assertIsNone(transformer.midi_control_in)
+
+    def test_start_with_control_port_opens_second_input(self):
+        fake_rtmidi = MagicMock()
+        fake_rtmidi.API_UNSPECIFIED = 0
+        fake_rtmidi.API_MACOSX_CORE = 1
+        fake_rtmidi.get_compiled_api.return_value = [1]
+        fake_rtmidi.get_api_display_name.return_value = "Core MIDI"
+        fake_rtmidi.get_api_name.return_value = "MACOSX_CORE"
+
+        midi_out = MagicMock()
+        midi_out.get_current_api.return_value = 1
+        midi_out.is_port_open.return_value = True
+        midi_out.get_ports.return_value = ["IAC Driver Entonal Out"]
+        fake_rtmidi.MidiOut.return_value = midi_out
+
+        midi_in = MagicMock()
+        midi_in.get_current_api.return_value = 1
+        midi_in.is_port_open.return_value = True
+        midi_in.get_ports.return_value = ["Performance", "Mode Keyboard"]
+        midi_control = MagicMock()
+        midi_control.get_current_api.return_value = 1
+        midi_control.is_port_open.return_value = True
+        midi_control.get_ports.return_value = ["Performance", "Mode Keyboard"]
+        fake_rtmidi.MidiIn.side_effect = [midi_in, midi_control]
+
+        with (
+            patch("transformer.rtmidi", fake_rtmidi),
+            patch("transformer.sys.platform", "darwin"),
+        ):
+            transformer = MidiTransformer(FakeWindow())
+            transformer.start(
+                "Performance",
+                "IAC Driver Entonal Out",
+                "Mode Keyboard",
+            )
+
+        self.assertEqual(
+            fake_rtmidi.MidiIn.call_args_list,
+            [
+                call(rtapi=1, name=CLIENT_NAME),
+                call(rtapi=1, name=CONTROL_CLIENT_NAME),
+            ],
+        )
+        self.assertIs(transformer.midi_in, midi_in)
+        self.assertIs(transformer.midi_control_in, midi_control)
+        midi_in.set_callback.assert_called_once()
+        midi_control.set_callback.assert_called_once()
+
+    def test_start_rejects_same_control_and_performance_port(self):
+        fake_rtmidi = MagicMock()
+        fake_rtmidi.API_UNSPECIFIED = 0
+        fake_rtmidi.API_MACOSX_CORE = 1
+        fake_rtmidi.get_compiled_api.return_value = [1]
+        with (
+            patch("transformer.rtmidi", fake_rtmidi),
+            patch("transformer.sys.platform", "darwin"),
+        ):
+            transformer = MidiTransformer(FakeWindow())
+            with self.assertRaisesRegex(ValueError, "different device"):
+                transformer.start("Keyboard", "Out", "Keyboard")
+        fake_rtmidi.MidiIn.assert_not_called()
+        fake_rtmidi.MidiOut.assert_not_called()
 
     def test_panic_sends_note_off_and_clears_active_notes(self):
         transformer, _window = make_transformer()
