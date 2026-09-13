@@ -1,128 +1,208 @@
 """Ancohemitonic mode database ported from jontools ValidModes.tsx."""
 
 # Authoritative copy of ancohemitonicModes from jontools/frontend/src/types/ValidModes.tsx
+# ANCOHEMITONIC_MODES = [
+#     {
+#         "parentScaleName": "Diatonic",
+#         "modes": [
+#             {"modeName": "Ionian/Major", "formula": [0, 0, 0, 0, 0, 0, 0]},
+#             {"modeName": "Dorian", "formula": [0, 0, -1, 0, 0, 0, -1]},
+#             {"modeName": "Phrygian", "formula": [0, -1, -1, 0, 0, -1, -1]},
+#             {"modeName": "Lydian", "formula": [0, 0, 0, 1, 0, 0, 0]},
+#             {"modeName": "Mixolydian", "formula": [0, 0, 0, 0, 0, 0, -1]},
+#             {"modeName": "Aeolian/Minor", "formula": [0, 0, -1, 0, 0, -1, -1]},
+#             {"modeName": "Locrian", "formula": [0, -1, -1, 0, -1, -1, -1]},
+#         ],
+#     },
+#     {
+#         "parentScaleName": "Melodic Minor",
+#         "modes": [
+#             {"modeName": "Melodic Minor", "formula": [0, 0, -1, 0, 0, 0, 0]},
+#             {"modeName": "Dorian Flat 2", "formula": [0, -1, -1, 0, 0, 0, -1]},
+#             {"modeName": "Lydian Augmented", "formula": [0, 0, 0, 1, 1, 0, 0]},
+#             {"modeName": "Lydian Dominant", "formula": [0, 0, 0, 1, 0, 0, -1]},
+#             {"modeName": "Mixolydian Flat 6", "formula": [0, 0, 0, 0, 0, -1, -1]},
+#             {"modeName": "Locrian Natural 2", "formula": [0, 0, 0, 0, -1, -1, -1]},
+#             {"modeName": "Altered Dominant", "formula": [0, -1, -1, -1, -1, -1, -1]},
+#         ],
+#     },
+#     {
+#         "parentScaleName": "Harmonic Minor",
+#         "modes": [
+#             {"modeName": "Harmonic Minor", "formula": [0, 0, -1, 0, 0, -1, 0]},
+#             {"modeName": "Locrian Natural 6", "formula": [0, -1, -1, 0, -1, 0, -1]},
+#             {"modeName": "Ionian Augmented", "formula": [0, 0, 0, 0, 1, 0, 0]},
+#             {"modeName": "Dorian Sharp 4", "formula": [0, 0, -1, 1, 0, 0, -1]},
+#             {"modeName": "Phrygian Dominant", "formula": [0, -1, 0, 0, 0, -1, -1]},
+#             {"modeName": "Lydian Sharp 2", "formula": [0, 1, 0, 1, 0, 0, 0]},
+#             {"modeName": "Ultralocrian", "formula": [0, -1, -1, -1, -1, -1, -2]},
+#         ],
+#     },
+#     {
+#         "parentScaleName": "Harmonic Major",
+#         "modes": [
+#             {"modeName": "Harmonic Major", "formula": [0, 0, 0, 0, 0, -1, 0]},
+#             {
+#                 "modeName": "Locrian Natural 2, Natural 6",
+#                 "formula": [0, 0, -1, 0, -1, 0, -1],
+#             },
+#             {"modeName": "Phrygian Flat 4", "formula": [0, -1, -1, -1, 0, -1, -1]},
+#             {
+#                 "modeName": "Melodic Minor Sharp 4",
+#                 "formula": [0, 0, -1, 1, 0, 0, 0],
+#             },
+#             {"modeName": "Mixolydian Flat 2", "formula": [0, -1, 0, 0, 0, 0, -1]},
+#             {
+#                 "modeName": "Lydian Augmented Sharp 2",
+#                 "formula": [0, 1, 0, 1, 1, 0, 0],
+#             },
+#             {
+#                 "modeName": "Locrian Double-Flat 7",
+#                 "formula": [0, -1, -1, 0, -1, -1, -2],
+#             },
+#         ],
+#     },
+#     {
+#         "parentScaleName": "Hungarian Major",
+#         "modes": [
+#             {"modeName": "Hungarian Major", "formula": [0, 1, 0, 1, 0, 0, -1]},
+#             {
+#                 "modeName": "Ultralocrian Double-Flat 6",
+#                 "formula": [0, -1, -1, -1, -1, -2, -2],
+#             },
+#             {
+#                 "modeName": "Harmonic Minor Flat 5",
+#                 "formula": [0, 0, -1, 0, -1, -1, 0],
+#             },
+#             {
+#                 "modeName": "Altered Dominant Natural 6",
+#                 "formula": [0, -1, -1, -1, -1, 0, -1],
+#             },
+#             {
+#                 "modeName": "Melodic Minor Augmented",
+#                 "formula": [0, 0, -1, 0, 1, 0, 0],
+#             },
+#             {
+#                 "modeName": "Dorian Flat 2, Sharp 4",
+#                 "formula": [0, -1, -1, 1, 0, 0, -1],
+#             },
+#             {
+#                 "modeName": "Lydian Augmented Sharp 3",
+#                 "formula": [0, 0, 1, 1, 1, 0, 0],
+#             },
+#         ],
+#     },
+#     {
+#         "parentScaleName": "Involution of Hungarian Major",
+#         "modes": [
+#             {
+#                 "modeName": "Involution of Hungarian Major",
+#                 "formula": [0, -1, 0, 1, 0, 0, -1],
+#             },
+#             {
+#                 "modeName": "Lydian Augmented Sharp 2, Sharp 3",
+#                 "formula": [0, 1, 1, 1, 1, 0, 0],
+#             },
+#             {
+#                 "modeName": "Locrian Natural 2, Double-Flat 7",
+#                 "formula": [0, 0, -1, 0, -1, -1, -2],
+#             },
+#             {
+#                 "modeName": "Altered Double-Flat 6",
+#                 "formula": [0, -1, -1, -1, -1, -2, -1],
+#             },
+#             {
+#                 "modeName": "Melodic Minor Flat 5",
+#                 "formula": [0, 0, -1, 0, -1, 0, 0],
+#             },
+#             {
+#                 "modeName": "Phrygian Flat 4, Natural 6",
+#                 "formula": [0, -1, -1, -1, 0, 0, -1],
+#             },
+#             {
+#                 "modeName": "Melodic Minor Augmented Sharp 4",
+#                 "formula": [0, 0, -1, 1, 1, 0, 0],
+#             },
+#         ],
+#     },
+# ]
+
 ANCOHEMITONIC_MODES = [
     {
         "parentScaleName": "Diatonic",
         "modes": [
-            {"modeName": "Ionian/Major", "formula": [0, 0, 0, 0, 0, 0, 0]},
-            {"modeName": "Dorian", "formula": [0, 0, -1, 0, 0, 0, -1]},
-            {"modeName": "Phrygian", "formula": [0, -1, -1, 0, 0, -1, -1]},
-            {"modeName": "Lydian", "formula": [0, 0, 0, 1, 0, 0, 0]},
-            {"modeName": "Mixolydian", "formula": [0, 0, 0, 0, 0, 0, -1]},
-            {"modeName": "Aeolian/Minor", "formula": [0, 0, -1, 0, 0, -1, -1]},
-            {"modeName": "Locrian", "formula": [0, -1, -1, 0, -1, -1, -1]},
+            {"modeName": "D-3", "formula": [0, -1, -1, 0, -1, -1, -1]},
+            {"modeName": "D-2", "formula": [0, -1, -1, 0, 0, -1, -1]},
+            {"modeName": "D-1", "formula": [0, 0, -1, 0, 0, -1, -1]},
+            {"modeName": "D0",  "formula": [0, 0, -1, 0, 0, 0, -1]},
+            {"modeName": "D+1", "formula": [0, 0, 0, 0, 0, 0, -1]},
+            {"modeName": "D+2", "formula": [0, 0, 0, 0, 0, 0, 0]},
+            {"modeName": "D+3", "formula": [0, 0, 0, 1, 0, 0, 0]},
         ],
     },
+
     {
         "parentScaleName": "Melodic Minor",
         "modes": [
-            {"modeName": "Melodic Minor", "formula": [0, 0, -1, 0, 0, 0, 0]},
-            {"modeName": "Dorian Flat 2", "formula": [0, -1, -1, 0, 0, 0, -1]},
-            {"modeName": "Lydian Augmented", "formula": [0, 0, 0, 1, 1, 0, 0]},
-            {"modeName": "Lydian Dominant", "formula": [0, 0, 0, 1, 0, 0, -1]},
-            {"modeName": "Mixolydian Flat 6", "formula": [0, 0, 0, 0, 0, -1, -1]},
-            {"modeName": "Locrian Natural 2", "formula": [0, 0, 0, 0, -1, -1, -1]},
-            {"modeName": "Altered Dominant", "formula": [0, -1, -1, -1, -1, -1, -1]},
+            {"modeName": "MM-4", "formula": [0, -1, -1, -1, -1, -1, -1]},
+            {"modeName": "MM-2", "formula": [0, 0, -1, 0, -1, -1, -1]},
+            {"modeName": "MM-1", "formula": [0, -1, -1, 0, 0, 0, -1]},
+            {"modeName": "MM0",  "formula": [0, 0, 0, 0, 0, -1, -1]},
+            {"modeName": "MM+1", "formula": [0, 0, -1, 0, 0, 0, 0]},
+            {"modeName": "MM+2", "formula": [0, 0, 0, 1, 0, 0, -1]},
+            {"modeName": "MM+4", "formula": [0, 0, 0, 1, 1, 0, 0]},
         ],
     },
+
     {
         "parentScaleName": "Harmonic Minor",
         "modes": [
-            {"modeName": "Harmonic Minor", "formula": [0, 0, -1, 0, 0, -1, 0]},
-            {"modeName": "Locrian Natural 6", "formula": [0, -1, -1, 0, -1, 0, -1]},
-            {"modeName": "Ionian Augmented", "formula": [0, 0, 0, 0, 1, 0, 0]},
-            {"modeName": "Dorian Sharp 4", "formula": [0, 0, -1, 1, 0, 0, -1]},
-            {"modeName": "Phrygian Dominant", "formula": [0, -1, 0, 0, 0, -1, -1]},
-            {"modeName": "Lydian Sharp 2", "formula": [0, 1, 0, 1, 0, 0, 0]},
-            {"modeName": "Ultralocrian", "formula": [0, -1, -1, -1, -1, -1, -2]},
+            {"modeName": "Hm-5", "formula": [0, -1, -1, -1, -1, -1, -2]},
+            {"modeName": "Hm-2", "formula": [0, -1, -1, 0, -1, 0, -1]},
+            {"modeName": "Hm-1", "formula": [0, -1, 0, 0, 0, -1, -1]},
+            {"modeName": "Hm0",  "formula": [0, 0, -1, 0, 0, -1, 0]},
+            {"modeName": "Hm+1", "formula": [0, 0, -1, 1, 0, 0, -1]},
+            {"modeName": "Hm+3", "formula": [0, 0, 0, 0, 1, 0, 0]},
+            {"modeName": "Hm+4", "formula": [0, 1, 0, 1, 0, 0, 0]},
         ],
     },
+
     {
         "parentScaleName": "Harmonic Major",
         "modes": [
-            {"modeName": "Harmonic Major", "formula": [0, 0, 0, 0, 0, -1, 0]},
-            {
-                "modeName": "Locrian Natural 2, Natural 6",
-                "formula": [0, 0, -1, 0, -1, 0, -1],
-            },
-            {"modeName": "Phrygian Flat 4", "formula": [0, -1, -1, -1, 0, -1, -1]},
-            {
-                "modeName": "Melodic Minor Sharp 4",
-                "formula": [0, 0, -1, 1, 0, 0, 0],
-            },
-            {"modeName": "Mixolydian Flat 2", "formula": [0, -1, 0, 0, 0, 0, -1]},
-            {
-                "modeName": "Lydian Augmented Sharp 2",
-                "formula": [0, 1, 0, 1, 1, 0, 0],
-            },
-            {
-                "modeName": "Locrian Double-Flat 7",
-                "formula": [0, -1, -1, 0, -1, -1, -2],
-            },
+            {"modeName": "HM-4", "formula": [0, -1, -1, 0, -1, -1, -2]},
+            {"modeName": "HM-3", "formula": [0, -1, -1, -1, 0, -1, -1]},
+            {"modeName": "HM-1", "formula": [0, 0, -1, 0, -1, 0, -1]},
+            {"modeName": "HM0",  "formula": [0, -1, 0, 0, 0, 0, -1]},
+            {"modeName": "HM+1", "formula": [0, 0, 0, 0, 0, -1, 0]},
+            {"modeName": "HM+2", "formula": [0, 0, -1, 1, 0, 0, 0]},
+            {"modeName": "HM+5", "formula": [0, 1, 0, 1, 1, 0, 0]},
         ],
     },
+
     {
         "parentScaleName": "Hungarian Major",
         "modes": [
-            {"modeName": "Hungarian Major", "formula": [0, 1, 0, 1, 0, 0, -1]},
-            {
-                "modeName": "Ultralocrian Double-Flat 6",
-                "formula": [0, -1, -1, -1, -1, -2, -2],
-            },
-            {
-                "modeName": "Harmonic Minor Flat 5",
-                "formula": [0, 0, -1, 0, -1, -1, 0],
-            },
-            {
-                "modeName": "Altered Dominant Natural 6",
-                "formula": [0, -1, -1, -1, -1, 0, -1],
-            },
-            {
-                "modeName": "Melodic Minor Augmented",
-                "formula": [0, 0, -1, 0, 1, 0, 0],
-            },
-            {
-                "modeName": "Dorian Flat 2, Sharp 4",
-                "formula": [0, -1, -1, 1, 0, 0, -1],
-            },
-            {
-                "modeName": "Lydian Augmented Sharp 3",
-                "formula": [0, 0, 1, 1, 1, 0, 0],
-            },
+            {"modeName": "Hu-6", "formula": [0, -1, -1, -1, -1, -2, -2]},
+            {"modeName": "Hu-3", "formula": [0, -1, -1, -1, -1, 0, -1]},
+            {"modeName": "Hu-1", "formula": [0, 0, -1, 0, -1, -1, 0]},
+            {"modeName": "Hu0",  "formula": [0, -1, -1, 1, 0, 0, -1]},
+            {"modeName": "Hu+2", "formula": [0, 0, -1, 0, 1, 0, 0]},
+            {"modeName": "Hu+3", "formula": [0, 1, 0, 1, 0, 0, -1]},
+            {"modeName": "Hu+5", "formula": [0, 0, 1, 1, 1, 0, 0]},
         ],
     },
+
     {
         "parentScaleName": "Involution of Hungarian Major",
         "modes": [
-            {
-                "modeName": "Involution of Hungarian Major",
-                "formula": [0, -1, 0, 1, 0, 0, -1],
-            },
-            {
-                "modeName": "Lydian Augmented Sharp 2, Sharp 3",
-                "formula": [0, 1, 1, 1, 1, 0, 0],
-            },
-            {
-                "modeName": "Locrian Natural 2, Double-Flat 7",
-                "formula": [0, 0, -1, 0, -1, -1, -2],
-            },
-            {
-                "modeName": "Altered Double-Flat 6",
-                "formula": [0, -1, -1, -1, -1, -2, -1],
-            },
-            {
-                "modeName": "Melodic Minor Flat 5",
-                "formula": [0, 0, -1, 0, -1, 0, 0],
-            },
-            {
-                "modeName": "Phrygian Flat 4, Natural 6",
-                "formula": [0, -1, -1, -1, 0, 0, -1],
-            },
-            {
-                "modeName": "Melodic Minor Augmented Sharp 4",
-                "formula": [0, 0, -1, 1, 1, 0, 0],
-            },
+            {"modeName": "HuI-5", "formula": [0, -1, -1, -1, -1, -2, -1]},
+            {"modeName": "HuI-3", "formula": [0, 0, -1, 0, -1, -1, -2]},
+            {"modeName": "HuI-2", "formula": [0, -1, -1, -1, 0, 0, -1]},
+            {"modeName": "HuI0",  "formula": [0, 0, -1, 0, -1, 0, 0]},
+            {"modeName": "HuI+1", "formula": [0, -1, 0, 1, 0, 0, -1]},
+            {"modeName": "HuI+3", "formula": [0, 0, -1, 1, 1, 0, 0]},
+            {"modeName": "HuI+6", "formula": [0, 1, 1, 1, 1, 0, 0]},
         ],
     },
 ]
